@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-customer-objective
+      author: rafael
+      changes:
+
+        - createTable:
+            tableName: customer_objective
+            columns:
+
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: customer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: objective_code
+                  type: INT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: name
+                  type: VARCHAR(100)
+
+              - column:
+                  name: name_normalized
+                  type: VARCHAR(100)
+
+              - column:
+                  name: selected
+                  type: BOOLEAN
+
+              - column:
+                  name: source
+                  type: VARCHAR(20)
+                  defaultValue: IMPORT
+
+              - column:
+                  name: snapshot_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+
+        # 🔗 FK → customer.id (VARCHAR)
+        - addForeignKeyConstraint:
+            baseTableName: customer_objective
+            baseColumnNames: customer_id
+            referencedTableName: customer
+            referencedColumnNames: id
+            constraintName: fk_customer_objective_customer
+            onDelete: CASCADE
+
+        # 🚀 Índice para performance de JOIN
+        - createIndex:
+            tableName: customer_objective
+            indexName: idx_customer_objective_customer
+            columns:
+              - column:
+                  name: customer_id
+
+        # 🧠 Evita duplicar objetivo no mesmo snapshot
+        - addUniqueConstraint:
+            tableName: customer_objective
+            columnNames: customer_id, objective_code, snapshot_at
+            constraintName: uk_customer_objective_snapshot

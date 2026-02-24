@@ -1,0 +1,68 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-training-plan
+      author: rafael
+      changes:
+
+        - createTable:
+            tableName: training_plan
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: customer_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: external_ref
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: start_at
+                  type: VARCHAR(255)
+
+              - column:
+                  name: end_at
+                  type: VARCHAR(255)
+
+              - column:
+                  name: name
+                  type: VARCHAR(255)
+
+              - column:
+                  name: active
+                  type: BOOLEAN
+
+              - column:
+                  name: execution_week
+                  type: VARCHAR(255)
+
+              - column:
+                  name: planned_sessions
+                  type: VARCHAR(255)
+
+              - column:
+                  name: content_hash
+                  type: VARCHAR(255)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_training_plan_customer
+            baseTableName: training_plan
+            baseColumnNames: customer_id
+            referencedTableName: customer
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addUniqueConstraint:
+            constraintName: uk_training_plan_customer_external
+            tableName: training_plan
+            columnNames: customer_id, external_ref

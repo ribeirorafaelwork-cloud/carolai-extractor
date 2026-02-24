@@ -1,0 +1,90 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-exercise
+      author: rafael
+      changes:
+        - createTable:
+            tableName: exercise
+            columns:
+                - column:
+                    name: id
+                    type: SERIAL
+                    constraints:
+                        primaryKey: true
+                - column:
+                    name: exercise_ref
+                    type: VARCHAR(255)
+                - column:
+                    name: exercise_name
+                    type: VARCHAR(255)
+                - column:
+                    name: notes
+                    type: TEXT
+                - column:
+                    name: video_url
+                    type: TEXT
+                - column:
+                    name: cover_url
+                    type: TEXT
+                - column:
+                    name: free_execution
+                    type: BOOLEAN
+                - column:
+                    name: in_home
+                    type: BOOLEAN
+                - column:
+                    name: order_index
+                    type: INT
+                - column:
+                    name: created_at
+                    type: BIGINT
+                - column:
+                    name: series_id
+                    type: BIGINT
+                    constraints:
+                        nullable: false
+                - column:
+                    name: execution_mode
+                    type: JSONB
+                    constraints:
+                        nullable: true
+                - column:
+                    name: muscle_groups
+                    type: JSONB
+                    constraints:
+                        nullable: true
+                - column:
+                    name: equipments
+                    type: JSONB
+                    constraints:
+                        nullable: true
+                - column:
+                    name: movement_pattern
+                    type: VARCHAR(30) # push, pull, hinge, squat, carry
+                    constraints:
+                        nullable: true
+
+                - column:
+                    name: difficulty_level
+                    type: VARCHAR(20) # facil, medio, dificil
+                    constraints:
+                        nullable: true
+
+                - column:
+                    name: unilateral
+                    type: BOOLEAN
+                    constraints:
+                        nullable: true
+
+
+        - addForeignKeyConstraint:
+            baseTableName: exercise
+            baseColumnNames: series_id
+            referencedTableName: series
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_exercise_series
+
+      rollback:
+        - dropTable:
+            tableName: exercise

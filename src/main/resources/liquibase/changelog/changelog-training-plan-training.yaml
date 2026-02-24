@@ -1,0 +1,52 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-training-plan-training
+      author: rafael
+      changes:
+
+        - createTable:
+            tableName: training_plan_training
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
+              - column:
+                  name: training_plan_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: training_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: content_hash
+                  type: VARCHAR(255)
+
+        - addForeignKeyConstraint:
+            constraintName: fk_training_plan_training_plan
+            baseTableName: training_plan_training
+            baseColumnNames: training_plan_id
+            referencedTableName: training_plan
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_training_plan_training_training
+            baseTableName: training_plan_training
+            baseColumnNames: training_id
+            referencedTableName: training
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addUniqueConstraint:
+            constraintName: uk_training_plan_training_unique
+            tableName: training_plan_training
+            columnNames: training_plan_id, training_id

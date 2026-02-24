@@ -1,0 +1,27 @@
+databaseChangeLog:
+        - include:
+            file: liquibase/changelog/changelog-customer.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-customer-objective.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-training.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-training-group.yaml
+            
+        - include:
+            file: liquibase/changelog/changelog-series.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-exercise.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-training-plan.yaml
+
+        - include:
+            file: liquibase/changelog/changelog-training-plan-training.yaml
+        
+        - include:
+            file: liquibase/changelog/changelog-physical-assessment.yaml

@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-series
+      author: rafael
+      changes:
+        - createTable:
+            tableName: series
+            columns:
+              - column:
+                  name: id
+                  type: SERIAL
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: series_ref
+                  type: VARCHAR(255)
+              - column:
+                  name: order_index
+                  type: INT
+              - column:
+                  name: exercise_interval
+                  type: JSONB
+              - column:
+                  name: group_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sets
+                  type: INT
+                  constraints:
+                    nullable: true
+              - column:
+                  name: reps_min
+                  type: INT
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: reps_max
+                  type: INT
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: rest_seconds
+                  type: INT
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: intensity_type
+                  type: VARCHAR(30) # carga, tempo, RPE
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: series
+            baseColumnNames: group_id
+            referencedTableName: training_group
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_series_training_group
+
+      rollback:
+        - dropTable:
+            tableName: series

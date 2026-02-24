@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: carolaiextractor_pg
+    restart: always
+    environment:
+      POSTGRES_USER: carolai
+      POSTGRES_PASSWORD: carolai
+      POSTGRES_DB: carolaiextractor
+    ports:
+      - "5432:5432"
+    volumes:
+      - carolaiextractor_pg_data:/var/lib/postgresql/data
+    networks:
+      - carolaiextractor-net
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: carolaiextractor_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - carolaiextractor-net
+
+  carolaiextractor-app:
+    build: .
+    container_name: carolaiextractor_app
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: "docker"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/carolaiextractor"
+      SPRING_DATASOURCE_USERNAME: "carolai"
+      SPRING_DATASOURCE_PASSWORD: "carolai"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./screenshots:/app/screenshots
+    depends_on:
+      - postgres
+    networks:
+      - carolaiextractor-net
+
+volumes:
+  carolaiextractor_pg_data:
+
+networks:
+  carolaiextractor-net:
+    driver: bridge

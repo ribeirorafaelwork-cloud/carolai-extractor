@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <!-- =======================
+         APPENDERS
+    ======================== -->
+    <Appenders>
+
+        <!-- Console -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="%highlight{%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n}{FATAL=red blink, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan}"/>
+        </Console>
+
+        <!-- Arquivo (com rotação diária + 20MB) -->
+        <RollingFile name="File"
+                     fileName="logs/app.log"
+                     filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz">
+
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"/>
+
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+        </RollingFile>
+
+    </Appenders>
+
+    <!-- =======================
+         LOGGERS
+    ======================== -->
+    <Loggers>
+
+        <!-- DEBUG para WebClient -->
+        <Logger name="org.springframework.web.reactive.function.client"
+                level="DEBUG"
+                additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- DEBUG para Reactor Netty -->
+        <Logger name="reactor.netty.http.client"
+                level="DEBUG"
+                additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- ROOT (assíncrono para alta performance) -->
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </AsyncRoot>
+
+    </Loggers>
+
+</Configuration>

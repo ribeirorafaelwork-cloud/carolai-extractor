@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-customer
+      author: rafael
+      changes:
+        - createTable:
+            tableName: customer
+            columns:
+                - column:
+                    name: id
+                    type: BIGSERIAL
+                    constraints:
+                        primaryKey: true
+                        nullable: false
+                - column:
+                    name: external_ref
+                    type: VARCHAR(64)
+                    constraints:
+                        nullable: false
+
+                - column:
+                    name: name
+                    type: VARCHAR(255)
+
+                - column:
+                    name: email
+                    type: VARCHAR(255)
+
+                - column:
+                    name: gender
+                    type: CHAR(1)
+
+                - column:
+                    name: birth_date
+                    type: VARCHAR(255)
+
+                - column:
+                    name: created_at
+                    type: VARCHAR(255)
+
+                - column:
+                    name: updated_at
+                    type: VARCHAR(255)
+                
+                - column:
+                    name: doc
+                    type: VARCHAR(255)
+                    
+                - column:
+                        name: content_hash
+                        type: VARCHAR(255)
+                        constraints:
+                            nullable: true
+
+        - addUniqueConstraint:
+            tableName: customer
+            columnNames: external_ref
+            constraintName: uk_customer_external

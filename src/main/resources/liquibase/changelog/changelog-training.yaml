@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-training
+      author: rafael
+      changes:
+        - createTable:
+            tableName: training
+            columns:
+                - column:
+                    name: id
+                    type: BIGSERIAL
+                    constraints:
+                        primaryKey: true
+                        nullable: false
+                - column:
+                    name: external_ref
+                    type: VARCHAR(255)
+                    constraints:
+                        nullable: false
+
+                - column:
+                    name: name
+                    type: VARCHAR(255)
+                    constraints:
+                        nullable: false
+
+                - column:
+                    name: personal_id
+                    type: VARCHAR(255)
+
+                - column:
+                    name: personal_name
+                    type: VARCHAR(255)
+
+                - column:
+                    name: cover_url
+                    type: TEXT
+
+                - column:
+                    name: notes
+                    type: TEXT
+
+                - column:
+                    name: created_at
+                    type: VARCHAR(255)
+
+                - column:
+                    name: content_hash
+                    type: VARCHAR(255)
+                    constraints:
+                        nullable: true
+        - addUniqueConstraint:
+            tableName: training
+            columnNames: external_ref
+            constraintName: uk_customer_external_ref

@@ -1,0 +1,8 @@
+services:
+  carolaiextractor:
+    image: carolaiextractor
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000

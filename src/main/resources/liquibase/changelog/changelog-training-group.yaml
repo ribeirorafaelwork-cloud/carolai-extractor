@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-training-group
+      author: rafael
+      changes:
+        - createTable:
+            tableName: training_group
+            columns:
+              - column:
+                  name: id
+                  type: SERIAL
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: group_ref
+                  type: VARCHAR(255)
+              - column:
+                  name: group_name
+                  type: VARCHAR(255)
+              - column:
+                  name: order_index
+                  type: INT
+              - column:
+                  name: training_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group_type
+                  type: VARCHAR(30) # aquecimento, principal, acessorio, finalizador
+                  constraints:
+                    nullable: true
+              - column:
+                  name: target_muscle_group
+                  type: VARCHAR(50) # opcional (peito, costas, perna)
+                  constraints:
+                    nullable: true
+
+        - addForeignKeyConstraint:
+            baseTableName: training_group
+            baseColumnNames: training_id
+            referencedTableName: training
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_training_group_training
+
+      rollback:
+        - dropTable:
+            tableName: training_group
