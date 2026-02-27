@@ -154,8 +154,8 @@ public class TrainingMapper extends Mapper {
             e.setOrderIndex(exInt(ex, "ordem"));
             e.setCreatedAt(exLong(ex, "dataCriado"));
 
-            e.setEquipments(ex.path("modoExecucao"));
-            e.setEquipments(ex.path("gruposMusculares"));
+            e.setExecutionMode(ex.path("modoExecucao"));
+            e.setMuscleGroups(ex.path("gruposMusculares"));
             e.setEquipments(ex.path("equipamentos"));
 
             series.addExercise(e);

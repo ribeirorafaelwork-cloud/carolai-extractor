@@ -55,10 +55,10 @@ public class TrainingPlanMapper extends Mapper {
         tpe.setCustomer(customer);
 
         tpe.setStartAt(
-            tpr.dataInicioLong() != null ? tpr.dataInicioLong().toString() : null
+            tpr.dataInicioLong() != null ? tpr.dataInicioLong().integerValue() : null
         );
         tpe.setEndAt(
-            tpr.dataTerminoLong() != null ? tpr.dataTerminoLong().toString() : null
+            tpr.dataTerminoLong() != null ? tpr.dataTerminoLong().integerValue() : null
         );
         tpe.setActive(
             tpr.planoTreinoAtivo() != null && tpr.planoTreinoAtivo().booleanValue()

@@ -40,6 +40,8 @@ public class CustomerEntity {
 
     private String birthDate;
 
+    private String phone;
+
     private String createdAt;
     
     private String updatedAt;
@@ -134,6 +136,14 @@ public class CustomerEntity {
     }
     public void setObjectives(List<CustomerObjectiveEntity> objectives) {
         this.objectives = objectives;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public String getDoc() {

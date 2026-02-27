@@ -38,6 +38,7 @@ public class CustomerMapper extends Mapper {
         c.setEmail(f.email() != null ? f.email().stringValue() : null);
         c.setGender(f.sexo() != null ? f.sexo().stringValue() : null);
         c.setDoc(f.cpf() != null ? f.cpf().stringValue() : null);
+        c.setPhone(f.telefoneCompleto() != null ? f.telefoneCompleto().stringValue() : null);
 
         c.setBirthDate(f.dataNascimento() != null
                 ? f.dataNascimento().format()
