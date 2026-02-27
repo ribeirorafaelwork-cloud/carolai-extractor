@@ -22,9 +22,28 @@ public class ExternalApiService {
 
     public ExternalApiService(ExternalApiProperties props) {
         this.props = props;
-        this.client = WebClient.builder()
-                .baseUrl(props.getPhysicalAssessmentBaseUrl())
-                .build();
+        String baseUrl = props.getPhysicalAssessmentBaseUrl();
+        var builder = WebClient.builder();
+        if (baseUrl != null && !baseUrl.isBlank()) {
+            builder.baseUrl(baseUrl);
+        }
+        this.client = builder.build();
+    }
+
+    public boolean isPhysicalAssessmentConfigured() {
+        String baseUrl = props.getPhysicalAssessmentBaseUrl();
+        String token = props.getPhysicalAssessmentToken();
+        return baseUrl != null && !baseUrl.isBlank()
+                && token != null && !token.isBlank();
+    }
+
+    public String fetchPhysicalAssessment(final String refUsuario) {
+        return get(props.getPhysicalAssessmentToken(),
+                props.getPhysicalAssessmentEndpoint(),
+                Map.of("refUsuario", refUsuario),
+                null,
+                String.class
+        );
     }
 
     public <T> T get(
@@ -60,25 +79,15 @@ public class ExternalApiService {
                 .onStatus(HttpStatusCode::isError, resp ->
                         resp.bodyToMono(String.class)
                                 .defaultIfEmpty("")
-                                .flatMap(body -> {
+                                .flatMap(b -> {
                                     final String msg = "Erro GET " + path +
                                             " status=" + resp.statusCode().value() +
-                                            " body=" + body;
+                                            " body=" + b;
                                     log.error(msg);
                                     return Mono.error(new IllegalStateException(msg));
                                 })
                 )
                 .bodyToMono(responseType)
                 .block();
-    }
-
-    public String fetchPhysicalAssessment(final String refUsuario) {
-
-        return get(props.getPhysicalAssessmentToken(),
-                props.getPhysicalAssessmentEndpoint(),
-                Map.of("refUsuario", refUsuario),
-                null,
-                String.class
-        );
     }
 }

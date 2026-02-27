@@ -31,24 +31,49 @@ public class PhysicalAssessmentFacade {
     }
 
     public void extractAndSave() {
+        if (!externalApiService.isPhysicalAssessmentConfigured()) {
+            log.warn("⚠ [SKIP] physical-assessment-token não configurado — pulando extração de avaliações físicas");
+            return;
+        }
+
         final List<CustomerEntity> customers = customerRepository.findAll();
+        int saved = 0, skipped = 0, apiErrors = 0, persistenceErrors = 0;
 
         for (CustomerEntity customer : customers) {
             final String refUsuario = customer.getExternalRef();
 
+            String rawJson;
             try {
-                log.info("Buscando avaliação física para refUsuario={}", refUsuario);
-
-                final String rawJson = externalApiService.fetchPhysicalAssessment(refUsuario);
-
-                physicalAssessmentService.parseAndUpsertFromRawJson(customer, rawJson);
+                rawJson = externalApiService.fetchPhysicalAssessment(refUsuario);
             } catch (Exception e) {
-                log.error(
-                        "Erro ao buscar avaliação física para refUsuario={}",
-                        refUsuario,
-                        e
-                );
+                apiErrors++;
+                log.warn("⚠ [API_ERROR] Falha ao buscar avaliação física para customer={}|externalRef={}: {}",
+                        customer.getId(), refUsuario, e.getMessage());
+                continue;
+            }
+
+            try {
+                int count = physicalAssessmentService.parseAndUpsertFromRawJson(customer, rawJson);
+                saved += count;
+                if (count == 0) skipped++;
+            } catch (Exception e) {
+                persistenceErrors++;
+                log.error("❌ [PERSISTENCE_ERROR] Falha ao inserir/atualizar avaliação física para customer={}|externalRef={}: {}",
+                        customer.getId(), refUsuario, e.getMessage(), e);
             }
         }
+
+        log.info("""
+                🎉 [PHYSICAL_ASSESSMENT_EXTRACTION]
+                Source: External API
+                Target: physical_assessment database
+                --------------------------------
+                Saved:              {}
+                Skipped:            {}
+                API Errors:         {}
+                Persistence Errors: {}
+                Total customers:    {}
+                """,
+                saved, skipped, apiErrors, persistenceErrors, customers.size());
     }
 }

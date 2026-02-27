@@ -4,5 +4,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.carolai.extractor.persistence.entity.ExerciseEntity;
 
-public interface ExerciseRepository extends JpaRepository<ExerciseEntity, String> {
+public interface ExerciseRepository extends JpaRepository<ExerciseEntity, Long> {
 }

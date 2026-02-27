@@ -49,8 +49,13 @@ public class CustomerService {
                 .whereEquals("tipoPerfil", props.getTypeProfile())
                 .whereEquals("idClienteApp", props.getIdClientApp());
 
-        List<RunQueryResponse<FirestoreDocumentResponse<CustomerResponse>>> results = 
-                firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        List<RunQueryResponse<FirestoreDocumentResponse<CustomerResponse>>> results;
+        try {
+            results = firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        } catch (Exception e) {
+            log.error("❌ [API_ERROR] Falha ao buscar customers do Firestore: {}", e.getMessage(), e);
+            return;
+        }
 
         if (results == null || results.isEmpty()) {
             log.warn("⚠ No customers returned from Firestore.");
@@ -111,7 +116,7 @@ public class CustomerService {
 
             return saveCustomer(incoming);
         } catch (Exception e) {
-            log.error("❌ Failed to process Customer document. {}", e.getMessage(), e);
+            log.error("❌ [PERSISTENCE_ERROR] Falha ao inserir/atualizar Customer: {}", e.getMessage(), e);
             return Outcome.SKIPPED;
         }
     }

@@ -48,8 +48,13 @@ public class TrainingService {
                 .fromCollection(collection)
                 .whereEquals("refPersonalMontou", props.getPersonalId());
 
-        List<RunQueryResponse<FirestoreDocumentResponse<FreeTrainingFieldsResponse>>> results = 
-                firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        List<RunQueryResponse<FirestoreDocumentResponse<FreeTrainingFieldsResponse>>> results;
+        try {
+            results = firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        } catch (Exception e) {
+            log.error("❌ [API_ERROR] Falha ao buscar trainings do Firestore: {}", e.getMessage(), e);
+            return;
+        }
 
         if (results == null || results.isEmpty()) {
             log.warn("⚠ No trainings returned from Firestore.");
@@ -110,7 +115,7 @@ public class TrainingService {
             return saveTraining(incoming);
 
         } catch (Exception e) {
-            log.error("❌ Failed to process training document. {}", e.getMessage(), e);
+            log.error("❌ [PERSISTENCE_ERROR] Falha ao inserir/atualizar Training: {}", e.getMessage(), e);
             return Outcome.SKIPPED;
         }
     }

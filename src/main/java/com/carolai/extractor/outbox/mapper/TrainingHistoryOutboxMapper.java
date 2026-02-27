@@ -38,7 +38,10 @@ public class TrainingHistoryOutboxMapper {
 
             List<Map<String, Object>> sessions = new ArrayList<>();
             int dayIndex = 1;
-            for (TrainingPlanTrainingEntity tpt : plan.getTrainingPlanTraining()) {
+            List<TrainingPlanTrainingEntity> sortedTpts = plan.getTrainingPlanTraining().stream()
+                    .sorted(Comparator.comparingLong(tpt -> tpt.getId() != null ? tpt.getId() : 0L))
+                    .toList();
+            for (TrainingPlanTrainingEntity tpt : sortedTpts) {
                 TrainingEntity training = tpt.getTraining();
                 if (training == null) continue;
 
@@ -99,7 +102,12 @@ public class TrainingHistoryOutboxMapper {
     }
 
     public String sourceKey(TrainingPlanEntity plan) {
-        return plan.getCustomer().getExternalRef() + ":plan:" + plan.getExternalRef();
+        String customerRef = plan.getCustomer() != null ? plan.getCustomer().getExternalRef() : null;
+        String customerKey = (customerRef != null && !customerRef.isBlank())
+                ? customerRef : "local-" + (plan.getCustomer() != null ? plan.getCustomer().getId() : "unknown");
+        String planRef = plan.getExternalRef();
+        String planKey = (planRef != null && !planRef.isBlank()) ? planRef : "local-" + plan.getId();
+        return customerKey + ":plan:" + planKey;
     }
 
     /**

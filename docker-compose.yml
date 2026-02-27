@@ -37,6 +37,7 @@ services:
       SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/carolaiextractor"
       SPRING_DATASOURCE_USERNAME: "carolai"
       SPRING_DATASOURCE_PASSWORD: "carolai"
+      EXTRACTOR_LOGIN_PASSWORD: "Carol2745personal"
     ports:
       - "8080:8080"
     volumes:

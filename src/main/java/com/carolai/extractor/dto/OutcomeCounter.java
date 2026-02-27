@@ -7,6 +7,7 @@ public class OutcomeCounter {
     private int updated;
     private int ignored;
     private int skipped;
+    private int apiErrors;
     private int size;
 
     public void increment(Outcome outcome) {
@@ -15,6 +16,7 @@ public class OutcomeCounter {
             case UPDATED -> updated++;
             case IGNORED -> ignored++;
             case SKIPPED -> skipped++;
+            case API_ERROR -> apiErrors++;
         }
     }
 
@@ -32,6 +34,10 @@ public class OutcomeCounter {
 
     public int getSkipped() {
         return skipped;
+    }
+
+    public int getApiErrors() {
+        return apiErrors;
     }
 
     public int getSize() {

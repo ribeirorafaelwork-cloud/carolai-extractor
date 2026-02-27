@@ -57,15 +57,17 @@ public class TrainingPlanTrainingService {
                 Collection: {}
                 Target: training_plan_training database
                 --------------------------------
-                Inserted: {}
-                Updated:  {}
-                Ignored:  {}
+                Inserted:   {}
+                Updated:    {}
+                Ignored:    {}
+                API Errors: {}
                 Total processed: {}
                 """,
                 props.getTrainingPlanTrainingSubcollection(),
                 counter.getInserted(),
                 counter.getUpdated(),
                 counter.getIgnored(),
+                counter.getApiErrors(),
                 counter.getSize()
         );
 
@@ -76,13 +78,21 @@ public class TrainingPlanTrainingService {
         final String subCollection = props.getTrainingPlanTrainingSubcollection();
         final String planoRef = trainingPlan.getExternalRef();
 
-        FirestoreSubCollectionResponse<List<FirestoreDocumentResponse<TrainingPlanTrainingFieldsResponse>>> doc = firestore.listSubcollection(
-            collection + "/" + planoRef,
-            subCollection,
-            new ParameterizedTypeReference<
-                FirestoreSubCollectionResponse<List<FirestoreDocumentResponse<TrainingPlanTrainingFieldsResponse>>>
-            >() {}
-        );
+        FirestoreSubCollectionResponse<List<FirestoreDocumentResponse<TrainingPlanTrainingFieldsResponse>>> doc;
+        try {
+            doc = firestore.listSubcollection(
+                collection + "/" + planoRef,
+                subCollection,
+                new ParameterizedTypeReference<
+                    FirestoreSubCollectionResponse<List<FirestoreDocumentResponse<TrainingPlanTrainingFieldsResponse>>>
+                >() {}
+            );
+        } catch (Exception e) {
+            log.warn("⚠ [API_ERROR] Falha ao buscar subcoleção do Firestore para trainingPlan={}|externalRef={}: {}",
+                    trainingPlan.getId(), planoRef, e.getMessage());
+            counter.increment(Outcome.API_ERROR);
+            return;
+        }
 
         if (doc == null || doc.documents() == null || doc.documents().isEmpty()) {
             log.debug("⚠ No treinosPreDefinidos returned from Firestore.");
@@ -116,7 +126,7 @@ public class TrainingPlanTrainingService {
             incoming.setTrainingPlan(trainingPlan);
             return saveTrainingPlanTraining(incoming);
         } catch (Exception e) {
-            log.error("❌ Failed to process training plan training document. {}", e.getMessage(), e);
+            log.error("❌ [PERSISTENCE_ERROR] Falha ao inserir/atualizar TrainingPlanTraining: {}", e.getMessage(), e);
             return Outcome.SKIPPED;
         }
     }

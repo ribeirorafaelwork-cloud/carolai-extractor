@@ -109,8 +109,17 @@ public class OutboxPopulationService {
             }
         }
 
-        log.info("Populated STUDENT outbox: total={}, inserted={}, updated={}, unchanged={}",
-                customers.size(), inserted, updated, unchanged);
+        log.info("""
+                🎉 [OUTBOX_POPULATE] STUDENT
+                Source: customer database
+                Target: export_outbox
+                --------------------------------
+                Inserted:  {}
+                Updated:   {}
+                Unchanged: {}
+                Total processed: {}
+                """,
+                inserted, updated, unchanged, customers.size());
         return new PopulateResult("STUDENT", customers.size(), inserted, updated, unchanged);
     }
 
@@ -137,8 +146,17 @@ public class OutboxPopulationService {
             }
         }
 
-        log.info("Populated TRAINING_HISTORY outbox: total={}, inserted={}, updated={}, unchanged={}",
-                total, inserted, updated, unchanged);
+        log.info("""
+                🎉 [OUTBOX_POPULATE] TRAINING_HISTORY
+                Source: customer + training_plan database
+                Target: export_outbox
+                --------------------------------
+                Inserted:  {}
+                Updated:   {}
+                Unchanged: {}
+                Total processed: {}
+                """,
+                inserted, updated, unchanged, total);
         return new PopulateResult("TRAINING_HISTORY", total, inserted, updated, unchanged);
     }
 
@@ -171,8 +189,17 @@ public class OutboxPopulationService {
             }
         }
 
-        log.info("Populated PHYSICAL_ASSESSMENT outbox: total={}, inserted={}, updated={}, unchanged={}",
-                assessments.size(), inserted, updated, unchanged);
+        log.info("""
+                🎉 [OUTBOX_POPULATE] PHYSICAL_ASSESSMENT
+                Source: physical_assessment database
+                Target: export_outbox
+                --------------------------------
+                Inserted:  {}
+                Updated:   {}
+                Unchanged: {}
+                Total processed: {}
+                """,
+                inserted, updated, unchanged, assessments.size());
         return new PopulateResult("PHYSICAL_ASSESSMENT", assessments.size(), inserted, updated, unchanged);
     }
 
@@ -198,32 +225,47 @@ public class OutboxPopulationService {
             }
         }
 
-        log.info("Populated OBJECTIVE outbox: total={}, inserted={}, updated={}, unchanged={}",
-                total, inserted, updated, unchanged);
+        log.info("""
+                🎉 [OUTBOX_POPULATE] OBJECTIVE
+                Source: customer database
+                Target: export_outbox
+                --------------------------------
+                Inserted:  {}
+                Updated:   {}
+                Unchanged: {}
+                Total processed: {}
+                """,
+                inserted, updated, unchanged, total);
         return new PopulateResult("OBJECTIVE", total, inserted, updated, unchanged);
     }
 
     private PopulateResult populateExercises() {
         List<ExerciseEntity> allExercises = exerciseRepository.findAll();
 
-        // Deduplicate by name, keep first non-null videoUrl
-        Map<String, String> nameToVideo = new LinkedHashMap<>();
+        // Deduplicate by normalized name (same normalization as sourceKey),
+        // keep first display name and first non-null videoUrl
+        Map<String, String> normalizedToDisplay = new LinkedHashMap<>();
+        Map<String, String> normalizedToVideo = new LinkedHashMap<>();
         for (ExerciseEntity e : allExercises) {
             String name = e.getExerciseName();
             if (name == null || name.isBlank()) continue;
-            name = name.trim();
+            String displayName = name.trim();
+            String normalized = displayName.toLowerCase(java.util.Locale.ROOT).replace(" ", "_");
 
-            if (!nameToVideo.containsKey(name)) {
-                nameToVideo.put(name, e.getVideoUrl());
-            } else if (nameToVideo.get(name) == null && e.getVideoUrl() != null) {
-                nameToVideo.put(name, e.getVideoUrl());
+            if (!normalizedToDisplay.containsKey(normalized)) {
+                normalizedToDisplay.put(normalized, displayName);
+                normalizedToVideo.put(normalized, e.getVideoUrl());
+            } else if (normalizedToVideo.get(normalized) == null && e.getVideoUrl() != null) {
+                normalizedToVideo.put(normalized, e.getVideoUrl());
             }
         }
 
         int inserted = 0, updated = 0, unchanged = 0;
-        for (Map.Entry<String, String> entry : nameToVideo.entrySet()) {
-            Map<String, Object> payload = exerciseMapper.toCanonicalPayload(entry.getKey(), entry.getValue());
-            String sourceKey = exerciseMapper.sourceKey(entry.getKey());
+        for (String normalized : normalizedToDisplay.keySet()) {
+            String displayName = normalizedToDisplay.get(normalized);
+            String videoUrl = normalizedToVideo.get(normalized);
+            Map<String, Object> payload = exerciseMapper.toCanonicalPayload(displayName, videoUrl);
+            String sourceKey = exerciseMapper.sourceKey(displayName);
             String hash = MigrationHashUtil.sha256(payload);
 
             UpsertOutcome outcome = upsertOutbox("EXERCISE", sourceKey, payload, hash);
@@ -234,9 +276,18 @@ public class OutboxPopulationService {
             }
         }
 
-        log.info("Populated EXERCISE outbox: total={}, inserted={}, updated={}, unchanged={}",
-                nameToVideo.size(), inserted, updated, unchanged);
-        return new PopulateResult("EXERCISE", nameToVideo.size(), inserted, updated, unchanged);
+        log.info("""
+                🎉 [OUTBOX_POPULATE] EXERCISE
+                Source: exercise database
+                Target: export_outbox
+                --------------------------------
+                Inserted:  {}
+                Updated:   {}
+                Unchanged: {}
+                Total processed: {}
+                """,
+                inserted, updated, unchanged, normalizedToDisplay.size());
+        return new PopulateResult("EXERCISE", normalizedToDisplay.size(), inserted, updated, unchanged);
     }
 
     private UpsertOutcome upsertOutbox(String entityType, String sourceKey, Map<String, Object> payload, String hash) {

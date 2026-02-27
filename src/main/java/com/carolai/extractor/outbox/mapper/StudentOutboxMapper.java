@@ -43,7 +43,8 @@ public class StudentOutboxMapper {
     }
 
     public String sourceKey(CustomerEntity customer) {
-        return customer.getExternalRef();
+        String ref = customer.getExternalRef();
+        return (ref != null && !ref.isBlank()) ? ref : "local-" + customer.getId();
     }
 
     private String mapGender(String raw) {

@@ -33,5 +33,4 @@ public class ExternalApiProperties {
         public void setPhysicalAssessmentBaseUrl(String physicalAssessmentBaseUrl) {
                 this.physicalAssessmentBaseUrl = physicalAssessmentBaseUrl;
         }
-        
 }

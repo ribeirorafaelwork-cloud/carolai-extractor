@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarolAI Extractor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .header h1 span { color: #38bdf8; }
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-idle { background: #1e293b; color: #94a3b8; }
+    .badge-running { background: #172554; color: #60a5fa; animation: pulse 1.5s infinite; }
+    .badge-done { background: #052e16; color: #4ade80; }
+    .badge-error { background: #450a0a; color: #f87171; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    button {
+      padding: 0.625rem 1.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-primary:disabled {
+      background: #1e3a5f;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: #1e293b;
+      color: #94a3b8;
+    }
+    .btn-secondary:hover { background: #334155; color: #e2e8f0; }
+
+    /* Pipeline */
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: #1e293b;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+    .step .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #334155;
+      transition: all 0.2s;
+    }
+    .step.running { background: #172554; color: #93c5fd; }
+    .step.running .dot { background: #60a5fa; animation: pulse 1s infinite; }
+    .step.ok { background: #052e16; color: #86efac; }
+    .step.ok .dot { background: #4ade80; }
+    .step.error { background: #450a0a; color: #fca5a5; }
+    .step.error .dot { background: #f87171; }
+
+    /* Console */
+    .console-wrapper {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 0.75rem;
+      overflow: hidden;
+    }
+    .console-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+    }
+    .console-header span {
+      font-size: 0.75rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    #console {
+      height: 480px;
+      overflow-y: auto;
+      padding: 0.75rem 1rem;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+    }
+    #console::-webkit-scrollbar { width: 6px; }
+    #console::-webkit-scrollbar-track { background: transparent; }
+    #console::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    .log-line { white-space: pre-wrap; word-break: break-all; }
+    .log-INFO { color: #4ade80; }
+    .log-WARN { color: #facc15; }
+    .log-ERROR { color: #f87171; }
+    .log-DEBUG { color: #64748b; }
+
+    .log-line .ts { color: #475569; }
+    .log-line .lvl { font-weight: 600; }
+    .log-line .src { color: #818cf8; }
+
+    .system-msg {
+      color: #38bdf8;
+      padding: 0.25rem 0;
+      font-weight: 500;
+    }
+    .error-msg {
+      color: #f87171;
+      font-weight: 500;
+    }
+
+    /* Line counter */
+    #line-count {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Carol<span>AI</span> Extractor</h1>
+      <span id="status" class="badge badge-idle">Idle</span>
+    </div>
+
+    <div class="actions">
+      <button id="btn-run" class="btn-primary" onclick="startExtraction()">Importar Tudo</button>
+      <button class="btn-secondary" onclick="clearConsole()">Limpar Console</button>
+    </div>
+
+    <div class="pipeline" id="pipeline"></div>
+
+    <div class="console-wrapper">
+      <div class="console-header">
+        <span>Console</span>
+        <span id="line-count">0 linhas</span>
+      </div>
+      <div id="console"></div>
+    </div>
+  </div>
+
+  <script>
+    const STEPS = [
+      { id: 'CUSTOMERS', label: 'Clientes' },
+      { id: 'TRAININGS', label: 'Treinos' },
+      { id: 'TRAINING_PLANS', label: 'Planos' },
+      { id: 'ASSESSMENTS', label: 'Avaliacoes' },
+      { id: 'OUTBOX_STUDENT', label: 'Outbox Alunos' },
+      { id: 'OUTBOX_TRAINING', label: 'Outbox Treinos' },
+      { id: 'OUTBOX_ASSESSMENT', label: 'Outbox Aval.' },
+      { id: 'OUTBOX_OBJECTIVE', label: 'Outbox Obj.' },
+      { id: 'OUTBOX_EXERCISE', label: 'Outbox Exerc.' },
+    ];
+
+    const pipelineEl = document.getElementById('pipeline');
+    const consoleEl = document.getElementById('console');
+    const statusEl = document.getElementById('status');
+    const btnRun = document.getElementById('btn-run');
+    const lineCountEl = document.getElementById('line-count');
+
+    let lineCount = 0;
+    let eventSource = null;
+
+    // Build pipeline badges
+    function renderPipeline() {
+      pipelineEl.innerHTML = STEPS.map(s =>
+        `<div class="step" id="step-${s.id}"><span class="dot"></span>${s.label}</div>`
+      ).join('');
+    }
+    renderPipeline();
+
+    function setStatus(state) {
+      statusEl.className = 'badge badge-' + state;
+      statusEl.textContent = { idle: 'Idle', running: 'Running', done: 'Done', error: 'Error' }[state];
+    }
+
+    function appendLine(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      consoleEl.appendChild(div);
+      lineCount++;
+      lineCountEl.textContent = lineCount + ' linhas';
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function clearConsole() {
+      consoleEl.innerHTML = '';
+      lineCount = 0;
+      lineCountEl.textContent = '0 linhas';
+    }
+
+    function resetSteps() {
+      STEPS.forEach(s => {
+        const el = document.getElementById('step-' + s.id);
+        if (el) el.className = 'step';
+      });
+    }
+
+    function setStepState(name, state) {
+      const el = document.getElementById('step-' + name);
+      if (el) el.className = 'step ' + state;
+    }
+
+    function startExtraction() {
+      if (eventSource) return;
+
+      btnRun.disabled = true;
+      setStatus('running');
+      resetSteps();
+      appendLine('<div class="system-msg">--- Iniciando importacao completa ---</div>');
+
+      eventSource = new EventSource('/api/extraction/stream');
+
+      eventSource.addEventListener('log', function(e) {
+        try {
+          const d = JSON.parse(e.data);
+          appendLine(
+            `<div class="log-line log-${d.level}">` +
+            `<span class="ts">[${d.timestamp}]</span> ` +
+            `<span class="lvl">[${d.level}]</span> ` +
+            `<span class="src">${d.logger}</span> — ${escapeHtml(d.message)}` +
+            `</div>`
+          );
+        } catch (_) {}
+      });
+
+      eventSource.addEventListener('step', function(e) {
+        try {
+          const d = JSON.parse(e.data);
+          setStepState(d.name, d.status === 'running' ? 'running' : d.status);
+
+          if (d.status === 'ok') {
+            const label = STEPS.find(s => s.id === d.name)?.label || d.name;
+            appendLine(`<div class="system-msg">✅ ${label} concluido em ${formatMs(d.durationMs)}</div>`);
+          } else if (d.status === 'error') {
+            const label = STEPS.find(s => s.id === d.name)?.label || d.name;
+            appendLine(`<div class="error-msg">❌ ${label} falhou: ${escapeHtml(d.error || 'Erro desconhecido')}</div>`);
+          }
+        } catch (_) {}
+      });
+
+      eventSource.addEventListener('complete', function(e) {
+        try {
+          const d = JSON.parse(e.data);
+          const status = d.success ? 'done' : 'error';
+          setStatus(status);
+          appendLine(
+            `<div class="system-msg">--- Importacao ${d.success ? 'concluida' : 'concluida com erros'} em ${formatMs(d.totalMs)} ---</div>`
+          );
+        } catch (_) {}
+        cleanup();
+      });
+
+      eventSource.addEventListener('error', function(e) {
+        try {
+          const d = JSON.parse(e.data);
+          appendLine(`<div class="error-msg">❌ ${escapeHtml(d.message)}</div>`);
+        } catch (_) {}
+        cleanup();
+      });
+
+      eventSource.onerror = function(e) {
+        // If the server returned 409, EventSource will fire onerror immediately
+        if (eventSource.readyState === EventSource.CLOSED) {
+          appendLine('<div class="error-msg">Conexao encerrada pelo servidor (possivelmente ja em execucao)</div>');
+          setStatus('error');
+          cleanup();
+        }
+      };
+    }
+
+    function cleanup() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      btnRun.disabled = false;
+    }
+
+    function formatMs(ms) {
+      if (ms < 1000) return ms + 'ms';
+      return (ms / 1000).toFixed(1) + 's';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+  </script>
+</body>
+</html>

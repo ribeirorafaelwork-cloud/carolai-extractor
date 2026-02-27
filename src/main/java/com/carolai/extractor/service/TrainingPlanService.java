@@ -48,8 +48,13 @@ public class TrainingPlanService {
                 .fromCollection(collection)
                 .whereEquals("refClienteApp", props.getIdClientApp());
 
-        List<RunQueryResponse<FirestoreDocumentResponse<TrainingPlanResponse>>> results = 
-                firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        List<RunQueryResponse<FirestoreDocumentResponse<TrainingPlanResponse>>> results;
+        try {
+            results = firestore.runQuery(collection, query, new ParameterizedTypeReference<>() {});
+        } catch (Exception e) {
+            log.error("❌ [API_ERROR] Falha ao buscar training plans do Firestore: {}", e.getMessage(), e);
+            return;
+        }
 
         if (results == null || results.isEmpty()) {
             log.debug("⚠ No training plan returned from Firestore.");
@@ -109,7 +114,7 @@ public class TrainingPlanService {
 
             return saveTrainingPlan(incoming);
         } catch (Exception e) {
-            log.error("❌ Failed to process training plan document. {}", e.getMessage(), e);
+            log.error("❌ [PERSISTENCE_ERROR] Falha ao inserir/atualizar TrainingPlan: {}", e.getMessage(), e);
             return Outcome.SKIPPED;
         }
     }

@@ -1,5 +1,5 @@
 package com.carolai.extractor.enums;
 
 public enum Outcome {
-    INSERTED, UPDATED, IGNORED, SKIPPED
+    INSERTED, UPDATED, IGNORED, SKIPPED, API_ERROR
 }

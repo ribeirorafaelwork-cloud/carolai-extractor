@@ -16,6 +16,6 @@ public class ExerciseOutboxMapper {
     }
 
     public String sourceKey(String exerciseName) {
-        return "exercise:" + exerciseName.trim().toLowerCase().replace(" ", "_");
+        return "exercise:" + exerciseName.trim().toLowerCase(java.util.Locale.ROOT).replace(" ", "_");
     }
 }
