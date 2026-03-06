@@ -51,6 +51,10 @@ public class TrainingPlanTrainingMapper extends Mapper {
 
         tpr.setTraining(training);
 
+        if (tptr.nomeTreino() != null && tptr.nomeTreino().stringValue() != null) {
+            tpr.setName(tptr.nomeTreino().stringValue().trim());
+        }
+
         try {
             String json = objectMapper.writeValueAsString(tptr);
             tpr.setContentHash(DigestUtils.sha256Hex(json));

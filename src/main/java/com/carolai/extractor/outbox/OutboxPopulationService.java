@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.EntityManager;
+
 import com.carolai.extractor.migration.mapper.MigrationHashUtil;
 import com.carolai.extractor.outbox.dto.PopulateResult;
 import com.carolai.extractor.outbox.mapper.ExerciseOutboxMapper;
@@ -46,6 +48,7 @@ public class OutboxPopulationService {
     private final PhysicalAssessmentOutboxMapper assessmentMapper;
     private final ObjectiveOutboxMapper objectiveMapper;
     private final ExerciseOutboxMapper exerciseMapper;
+    private final EntityManager entityManager;
 
     public OutboxPopulationService(
             CustomerRepository customerRepository,
@@ -56,7 +59,8 @@ public class OutboxPopulationService {
             TrainingHistoryOutboxMapper trainingHistoryMapper,
             PhysicalAssessmentOutboxMapper assessmentMapper,
             ObjectiveOutboxMapper objectiveMapper,
-            ExerciseOutboxMapper exerciseMapper
+            ExerciseOutboxMapper exerciseMapper,
+            EntityManager entityManager
     ) {
         this.customerRepository = customerRepository;
         this.physicalAssessmentRepository = physicalAssessmentRepository;
@@ -67,6 +71,7 @@ public class OutboxPopulationService {
         this.assessmentMapper = assessmentMapper;
         this.objectiveMapper = objectiveMapper;
         this.exerciseMapper = exerciseMapper;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -124,10 +129,19 @@ public class OutboxPopulationService {
     }
 
     private PopulateResult populateTrainingHistory() {
-        List<CustomerEntity> customers = customerRepository.findAll();
-        int total = 0, inserted = 0, updated = 0, unchanged = 0;
+        // Load only IDs first to avoid keeping all entities + large JSONB in memory
+        List<Long> customerIds = customerRepository.findAll().stream()
+                .map(CustomerEntity::getId)
+                .toList();
+        entityManager.clear();
 
-        for (CustomerEntity customer : customers) {
+        int total = 0, inserted = 0, updated = 0, unchanged = 0;
+        int processed = 0;
+
+        for (Long customerId : customerIds) {
+            CustomerEntity customer = customerRepository.findById(customerId).orElse(null);
+            if (customer == null) continue;
+
             List<Map<String, Object>> payloads = trainingHistoryMapper.toCanonicalPayloads(customer);
 
             for (int i = 0; i < payloads.size(); i++) {
@@ -144,10 +158,20 @@ public class OutboxPopulationService {
                     case UNCHANGED -> unchanged++;
                 }
             }
+
+            processed++;
+            // Clear Hibernate cache every 20 customers to free memory from large JSONB fields
+            if (processed % 20 == 0) {
+                entityManager.flush();
+                entityManager.clear();
+                if (processed % 100 == 0) {
+                    log.info("[OUTBOX_TRAINING_HISTORY] Progress: {}/{}", processed, customerIds.size());
+                }
+            }
         }
 
         log.info("""
-                🎉 [OUTBOX_POPULATE] TRAINING_HISTORY
+                [OUTBOX_POPULATE] TRAINING_HISTORY
                 Source: customer + training_plan database
                 Target: export_outbox
                 --------------------------------

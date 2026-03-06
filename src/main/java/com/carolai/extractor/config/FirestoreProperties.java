@@ -11,6 +11,7 @@ public class FirestoreProperties {
         private String customerCollection;
         private String trainingPlanCollection;
         private String trainingPlanTrainingSubcollection;
+        private String studentTrainingSubcollection;
         private String personalId;
         private String typeProfile;
         private String idClientApp;
@@ -79,5 +80,13 @@ public class FirestoreProperties {
         public void setTrainingPlanTrainingSubcollection(String trainingPlanTrainingSubcollection) {
                 this.trainingPlanTrainingSubcollection = trainingPlanTrainingSubcollection;
         }
-        
+
+        public String getStudentTrainingSubcollection() {
+                return studentTrainingSubcollection;
+        }
+
+        public void setStudentTrainingSubcollection(String studentTrainingSubcollection) {
+                this.studentTrainingSubcollection = studentTrainingSubcollection;
+        }
+
 }

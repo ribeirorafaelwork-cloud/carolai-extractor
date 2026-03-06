@@ -1,6 +1,10 @@
 package com.carolai.extractor.service;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,17 +46,42 @@ public class TrainingPlanTrainingService {
         this.trainingPlanTrainingMapper = trainingPlanTrainingMapper;
     }
 
+    private static final int PARALLELISM = 10;
+
     public void extractAndSave() {
         List<TrainingPlanEntity> trainingPlans = trainingPlanRepository.findAll();
 
         OutcomeCounter counter = new OutcomeCounter();
+        AtomicInteger progress = new AtomicInteger(0);
+        int total = trainingPlans.size();
 
-        for (TrainingPlanEntity trainingPlan : trainingPlans) {
-            processTrainingPlanTrainings(trainingPlan, counter);
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            java.util.concurrent.Semaphore semaphore = new java.util.concurrent.Semaphore(PARALLELISM);
+
+            for (TrainingPlanEntity trainingPlan : trainingPlans) {
+                semaphore.acquire();
+                executor.submit(() -> {
+                    try {
+                        processTrainingPlanTrainings(trainingPlan, counter);
+                        int done = progress.incrementAndGet();
+                        if (done % 100 == 0) {
+                            log.info("[TRAINING_PLAN_TRAINING] Progress: {}/{}", done, total);
+                        }
+                    } finally {
+                        semaphore.release();
+                    }
+                });
+            }
+
+            executor.shutdown();
+            executor.awaitTermination(10, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("[TRAINING_PLAN_TRAINING] Interrupted during parallel extraction");
         }
 
         log.info("""
-                🎉 [TRAINING_PLAN_TRAINING_EXTRACTION]
+                [TRAINING_PLAN_TRAINING_EXTRACTION]
                 Source: Firestore
                 Collection: {}
                 Target: training_plan_training database
@@ -70,7 +99,6 @@ public class TrainingPlanTrainingService {
                 counter.getApiErrors(),
                 counter.getSize()
         );
-
     }
 
     private void processTrainingPlanTrainings(TrainingPlanEntity trainingPlan, OutcomeCounter counter) {

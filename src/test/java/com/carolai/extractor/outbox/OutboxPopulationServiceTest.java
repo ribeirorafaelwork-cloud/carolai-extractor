@@ -43,6 +43,7 @@ class OutboxPopulationServiceTest {
     @Mock private PhysicalAssessmentOutboxMapper assessmentMapper;
     @Mock private ObjectiveOutboxMapper objectiveMapper;
     @Mock private ExerciseOutboxMapper exerciseMapper;
+    @Mock private jakarta.persistence.EntityManager entityManager;
 
     private OutboxPopulationService service;
 
@@ -57,7 +58,8 @@ class OutboxPopulationServiceTest {
                 trainingHistoryMapper,
                 assessmentMapper,
                 objectiveMapper,
-                exerciseMapper
+                exerciseMapper,
+                entityManager
         );
     }
 

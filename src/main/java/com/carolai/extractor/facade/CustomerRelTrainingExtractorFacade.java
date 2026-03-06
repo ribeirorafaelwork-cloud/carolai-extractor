@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.carolai.extractor.service.StudentTrainingService;
 import com.carolai.extractor.service.TrainingPlanService;
 import com.carolai.extractor.service.TrainingPlanTrainingService;
 
@@ -19,8 +20,12 @@ public class CustomerRelTrainingExtractorFacade {
     @Autowired
     private TrainingPlanTrainingService trainingPlanTrainingService;
 
+    @Autowired
+    private StudentTrainingService studentTrainingService;
+
     public void extractAndSave() {
         trainingPlanService.extractAndSave();
         trainingPlanTrainingService.extractAndSave();
+        studentTrainingService.extractAndSave();
     }
 }

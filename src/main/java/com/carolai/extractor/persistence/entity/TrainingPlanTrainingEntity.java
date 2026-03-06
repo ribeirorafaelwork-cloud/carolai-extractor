@@ -1,5 +1,10 @@
 package com.carolai.extractor.persistence.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,6 +29,8 @@ public class TrainingPlanTrainingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    private String name;
 
     @Column(name = "content_hash")
     private String contentHash;
@@ -60,6 +67,14 @@ public class TrainingPlanTrainingEntity {
         this.training = training;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getContentHash() {
         return contentHash;
     }
@@ -68,5 +83,26 @@ public class TrainingPlanTrainingEntity {
         this.contentHash = contentHash;
     }
 
-     
+    @Column(name = "student_exercises_json", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode studentExercisesJson;
+
+    @Column(name = "student_training_name")
+    private String studentTrainingName;
+
+    public JsonNode getStudentExercisesJson() {
+        return studentExercisesJson;
+    }
+
+    public void setStudentExercisesJson(JsonNode studentExercisesJson) {
+        this.studentExercisesJson = studentExercisesJson;
+    }
+
+    public String getStudentTrainingName() {
+        return studentTrainingName;
+    }
+
+    public void setStudentTrainingName(String studentTrainingName) {
+        this.studentTrainingName = studentTrainingName;
+    }
 }
