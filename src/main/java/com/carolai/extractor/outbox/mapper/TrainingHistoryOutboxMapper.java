@@ -58,7 +58,6 @@ public class TrainingHistoryOutboxMapper {
                 );
                 session.put("seriesName", sessionName);
                 session.put("trainingRef", training.getExternalRef());
-                session.put("coverUrl", training.getCoverUrl());
                 session.put("notes", training.getNotes());
 
                 List<Map<String, Object>> exercises;
